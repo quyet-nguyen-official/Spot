@@ -374,7 +374,8 @@ class Minitaur(object):
             childFrameOrientation=init_orientation)
         return fixed_constraint
 
-    def is_observation_valid(self):
+    @staticmethod
+    def is_observation_valid():
         """Whether the observation is valid for the current time step.
 
     In simulation, observations are always valid. In real hardware, it may not
@@ -619,8 +620,7 @@ class Minitaur(object):
             self._control_observation[3 * self.num_motors:3 * self.num_motors + 4])
         delayed_roll_pitch_yaw = self._pybullet_client.getEulerFromQuaternion(
             delayed_orientation)
-        roll_pitch_yaw = self._add_sensor_noise(np.array(delayed_roll_pitch_yaw),
-                                              self._observation_noise_stdev[3])
+        roll_pitch_yaw = self._add_sensor_noise(np.array(delayed_roll_pitch_yaw), self._observation_noise_stdev[3])
         return roll_pitch_yaw
 
     def get_hip_postion_in_base_fram(self):
@@ -675,8 +675,7 @@ class Minitaur(object):
         )
         motors_per_leg = self.num_motors // self.num_legs
         com_dof = 6
-        return full_jacobian[com_dof + leg_id * motors_per_leg:com_dof +
-                                                               (leg_id + 1) * motors_per_leg]
+        return full_jacobian[com_dof + leg_id * motors_per_leg:com_dof + (leg_id + 1) * motors_per_leg]
 
     def map_contact_force_to_joint_torques(self, leg_id, contact_force):
         """Maps the foot contact force to the leg joint torques."""
@@ -770,8 +769,7 @@ class Minitaur(object):
       Velocities of all eight motors polluted by noise and latency.
     """
         return self._add_sensor_noise(
-            np.array(self._control_observation[self.num_motors:2 *
-                                                               self.num_motors]),
+            np.array(self._control_observation[self.num_motors:2 * self.num_motors]),
             self._observation_noise_stdev[1])
 
     def get_true_motor_torques(self):
@@ -790,8 +788,7 @@ class Minitaur(object):
       Motor torques of all eight motors polluted by noise and latency.
     """
         return self._add_sensor_noise(
-            np.array(self._control_observation[2 * self.num_motors:3 *
-                                                                   self.num_motors]),
+            np.array(self._control_observation[2 * self.num_motors:3 * self.num_motors]),
             self._observation_noise_stdev[2])
 
     def get_energy_consumption_per_control_step(self):
