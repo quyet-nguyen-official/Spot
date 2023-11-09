@@ -9,7 +9,6 @@ from motion_imitation.robots import laikago_motor
 from motion_imitation.robots import minitaur
 from motion_imitation.robots import robot_config
 from motion_imitation.envs import locomotion_gym_config
-from motion_imitation import urdf_robot
 
 NUM_MOTORS = 12
 NUM_LEGS = 4
@@ -65,7 +64,7 @@ _MOTOR_NAME_PATTERN = re.compile(r"\w+_hip_motor_\w+")
 _KNEE_NAME_PATTERN = re.compile(r"\w+_lower_leg_\w+")
 _TOE_NAME_PATTERN = re.compile(r"jtoe\d*")
 
-URDF_FILENAME = "r"
+URDF_FILENAME = "urdf_robot/laikago_copy/laikago_toes_limits.urdf"
 
 _BODY_B_FIELD_NUMBER = 2
 _LINK_A_FIELD_NUMBER = 3
