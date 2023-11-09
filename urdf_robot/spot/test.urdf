@@ -1,0 +1,51 @@
+<?xml version="1.0" ?>
+
+
+<robot
+  name="spot">
+
+ 
+  
+  
+    <link
+    name="RR_hip_motor">
+    <inertial>
+      <origin
+        xyz="-0.0495361239995728 -0.0121004517164508 0.00333734117665012"
+        rpy="0 0 0" />
+      <mass
+        value="0.126255489368789" />
+      <inertia
+        ixx="4.20937385671924E-05"
+        ixy="9.26212791323576E-10"
+        ixz="9.15301981486698E-09"
+        iyy="0.000106862025701092"
+        iyz="1.80316674432087E-06"
+        izz="0.000106677222068073" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/rh_hip_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.752941176470588 0.752941176470588 0.752941176470588 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/rh_hip_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+  
+</robot>

@@ -1,0 +1,55 @@
+ <link
+    name="lidar_link">
+    <inertial>
+      <origin
+        xyz="-0.00576993166002146 -0.000337492823115196 0.0144383216860659"
+        rpy="0 0 0" />
+      <mass
+        value="0.142992069515117" />
+      <inertia
+        ixx="4.62768458751422E-05"
+        ixy="-8.53425878441539E-07"
+        ixz="-3.62176045397522E-06"
+        iyy="7.34715191336753E-05"
+        iyz="2.04241589925864E-07"
+        izz="0.000107957357997996" />
+    </inertial>
+    <visual>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/lidar_link.STL" />
+      </geometry>
+      <material
+        name="">
+        <color
+          rgba="0.792156862745098 0.819607843137255 0.933333333333333 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin
+        xyz="0 0 0"
+        rpy="0 0 0" />
+      <geometry>
+        <mesh
+          filename="meshes/lidar_link.STL" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <joint
+    name="lidar_joint"
+    type="fixed">
+    <origin
+      xyz="0 0 0"
+      rpy="0 0 0" />
+    <parent
+      link="chassis" />
+    <child
+      link="lidar_link" />
+    <axis
+      xyz="0 0 0" />
+  </joint>

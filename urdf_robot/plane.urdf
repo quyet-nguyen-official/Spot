@@ -1,0 +1,23 @@
+<?xml version="1.0" ?>
+<robot name="2D_Robot">
+  <link name="base_link">
+    <inertial>
+      <mass value="1" />
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01" />
+    </inertial>
+    <visual>
+      <origin rpy="0 0 0" xyz="0 0 0" />
+      <geometry>
+        <sphere radius="0.1" />
+      </geometry>
+    </visual>
+  </link>
+
+  <joint name="joint_1" type="revolute">
+    <origin rpy="0 0 0" xyz="0 0 0" />
+    <parent link="base_link" />
+    <child link="link_1" />
+    <axis xyz="0 0 1" />
+  </joint>
+
