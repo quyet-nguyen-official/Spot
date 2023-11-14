@@ -167,40 +167,41 @@ class Spot(minitaur.Minitaur):
             enable_action_filter=enable_action_filter,
             reset_time=reset_time)
 
-    def _LoadRobotURDF(self):
-        laikago_urdf_path = self.GetURDFFile()
+    def _load_robot_urdf_(self):
+        laikago_urdf_path = self.get_urdf_file_()
         if self._self_collision_enabled:
             self.quadruped = self._pybullet_client.loadURDF(
                 laikago_urdf_path,
-                self._GetDefaultInitPosition(),
-                self._GetDefaultInitOrientation(),
+                self._get_default_init_position_(),
+                self._get_default_init_orientation_(),
                 flags=self._pybullet_client.URDF_USE_SELF_COLLISION)
         else:
             self.quadruped = self._pybullet_client.loadURDF(
-                laikago_urdf_path, self._GetDefaultInitPosition(),
-                self._GetDefaultInitOrientation())
+                laikago_urdf_path, self._get_default_init_position_(),
+                self._get_default_init_orientation_())
 
-    def _SettleDownForReset(self, default_motor_angles, reset_time):
-        self.ReceiveObservation()
+    def _settle_down_for_reset_(self, default_motor_angles, reset_time):
+        self._receive_observation()
 
         if reset_time <= 0:
             return
 
         for _ in range(500):
-            self._StepInternal(
+            self._step_internal(
                 INIT_MOTOR_ANGLES,
                 motor_control_mode=robot_config.MotorControlMode.POSITION)
         if default_motor_angles is not None:
             num_steps_to_reset = int(reset_time / self.time_step)
             for _ in range(num_steps_to_reset):
-                self._StepInternal(
+                self._step_internal(
                     default_motor_angles,
                     motor_control_mode=robot_config.MotorControlMode.POSITION)
 
-    def GetHipPositionsInBaseFrame(self):
+    @staticmethod
+    def get_hip_positions_in_base_frame():
         return _DEFAULT_HIP_POSITIONS
 
-    def GetFootContacts(self):
+    def get_foot_contacts_(self):
         all_contacts = self._pybullet_client.getContactPoints(bodyA=self.quadruped)
 
         contacts = [False, False, False, False]
@@ -217,19 +218,19 @@ class Spot(minitaur.Minitaur):
 
         return contacts
 
-    def ComputeJacobian(self, leg_id):
+    def compute_jacobian_(self, leg_id):
         """Compute the Jacobian for a given leg."""
         # Because of the default rotation in the Laikago URDF, we need to reorder
         # the rows in the Jacobian matrix.
-        return super(Laikago, self).ComputeJacobian(leg_id)[(2, 0, 1), :]
+        return super().compute_jacobian(leg_id)[(2, 0, 1), :]
 
-    def ResetPose(self, add_constraint):
+    def reset_pose_(self, add_constraint):
         del add_constraint
         for name in self._joint_name_to_id:
             joint_id = self._joint_name_to_id[name]
             self._pybullet_client.setJointMotorControl2(
                 bodyIndex=self.quadruped,
-                jointIndex=(joint_id),
+                jointIndex=joint_id,
                 controlMode=self._pybullet_client.VELOCITY_CONTROL,
                 targetVelocity=0,
                 force=0)
@@ -248,10 +249,10 @@ class Spot(minitaur.Minitaur):
                                                   angle,
                                                   targetVelocity=0)
 
-    def GetURDFFile(self):
+    def get_urdf_file_(self):
         return self._urdf_filename
 
-    def _BuildUrdfIds(self):
+    def _build_urdf_ids_(self):
         """Build the link Ids from its name in the URDF file.
 
     Raises:
@@ -291,38 +292,41 @@ class Spot(minitaur.Minitaur):
         self._foot_link_ids.sort()
         self._leg_link_ids.sort()
 
-    def _GetMotorNames(self):
+    @staticmethod
+    def _get_motor_names_():
         return MOTOR_NAMES
 
-    def _GetDefaultInitPosition(self):
+    def _get_default_init_position_(self):
         if self._on_rack:
             return INIT_RACK_POSITION
         else:
             return INIT_POSITION
 
-    def _GetDefaultInitOrientation(self):
+    @staticmethod
+    def _get_default_init_orientation_():
         # The Laikago URDF assumes the initial pose of heading towards z axis,
-        # and belly towards y axis. The following transformation is to transform
+        # and belly towards y-axis. The following transformation is to transform
         # the Laikago initial orientation to our commonly used orientation: heading
         # towards -x direction, and z axis is the up direction.
         init_orientation = p.getQuaternionFromEuler(
             [math.pi / 2.0, 0, math.pi / 2.0])
         return init_orientation
 
-    def GetDefaultInitPosition(self):
+    def get_default_init_position(self):
         """Get default initial base position."""
-        return self._GetDefaultInitPosition()
+        return self._get_default_init_position_()
 
-    def GetDefaultInitOrientation(self):
+    def get_default_init_orientation(self):
         """Get default initial base orientation."""
-        return self._GetDefaultInitOrientation()
+        return self._get_default_init_orientation_()
 
-    def GetDefaultInitJointPose(self):
+    @staticmethod
+    def get_default_init_joint_pose():
         """Get default initial joint pose."""
         joint_pose = (INIT_MOTOR_ANGLES + JOINT_OFFSETS) * JOINT_DIRECTIONS
         return joint_pose
 
-    def ApplyAction(self, motor_commands, motor_control_mode):
+    def apply_action(self, motor_commands, motor_control_mode):
         """Clips and then apply the motor commands using the motor model.
 
     Args:
@@ -331,11 +335,11 @@ class Spot(minitaur.Minitaur):
       motor_control_mode: A MotorControlMode enum.
     """
         if self._enable_clip_motor_commands:
-            motor_commands = self._ClipMotorCommands(motor_commands)
+            motor_commands = self._clip_motor_commands(motor_commands)
 
-        super(Laikago, self).ApplyAction(motor_commands, motor_control_mode)
+        super()._apply_action(motor_commands, motor_control_mode)
 
-    def _ClipMotorCommands(self, motor_commands):
+    def _clip_motor_commands(self, motor_commands):
         """Clips motor commands.
 
     Args:
@@ -348,13 +352,13 @@ class Spot(minitaur.Minitaur):
 
         # clamp the motor command by the joint limit, in case weired things happens
         max_angle_change = MAX_MOTOR_ANGLE_CHANGE_PER_STEP
-        current_motor_angles = self.GetMotorAngles()
+        current_motor_angles = self.get_motor_angles()
         motor_commands = np.clip(motor_commands,
                                  current_motor_angles - max_angle_change,
                                  current_motor_angles + max_angle_change)
         return motor_commands
 
     @classmethod
-    def GetConstants(cls):
+    def get_constants_(cls):
         del cls
         return spot_constants

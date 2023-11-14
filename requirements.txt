@@ -11,3 +11,4 @@ tqdm
 numba
 quadprog
 inputs
+sudo apt install libopenmpi-dev
