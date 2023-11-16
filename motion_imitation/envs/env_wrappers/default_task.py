@@ -51,3 +51,4 @@ class DefaultTask(object):
     """Get the reward without side effects."""
     del env
     return 1
+

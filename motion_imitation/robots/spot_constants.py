@@ -14,7 +14,7 @@
 # limitations under the License.
 
 # Lint as: python3
-"""định nghĩa các hằng số và đặc điểm kỹ thuật liên quan đến robot Laikago cũng như đặc tả URDF của robot này."""
+"""Defines the laikago robot related constants and URDF specs."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -22,7 +22,7 @@ from __future__ import print_function
 
 import collections
 import math
-import pybullet as pyb  # pytype: disable=import-error
+import pybullet as pyb # pytype: disable=import-error
 
 NUM_MOTORS = 12
 NUM_LEGS = 4

@@ -1,15 +1,35 @@
+# coding=utf-8
+# Copyright 2020 The Google Research Authors.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+import os
+import inspect
 import math
 import re
 import numpy as np
 import pybullet as p
-
-from motion_imitation.robots import spot_pose_utils
-from motion_imitation.robots import spot_constants
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+parentdir = os.path.dirname(os.path.dirname(currentdir))
+os.sys.path.insert(0, parentdir)
+from motion_imitation.robots import laikago_pose_utils
+from motion_imitation.robots import laikago_constants
 from motion_imitation.robots import laikago_motor
 from motion_imitation.robots import minitaur
 from motion_imitation.robots import robot_config
 from motion_imitation.envs import locomotion_gym_config
 
+"""Pybullet simulation of a Laikago robot."""
 NUM_MOTORS = 12
 NUM_LEGS = 4
 MOTOR_NAMES = [
@@ -26,24 +46,29 @@ MOTOR_NAMES = [
     "RL_upper_leg_2_hip_motor_joint",
     "RL_lower_leg_2_upper_leg_joint",
 ]
-INIT_RACK_POSITION = [0, 0, 1]
-INIT_POSITION = [0, 0, 0.48]
+INIT_RACK_POSITION = [0, 0, 0.5]
+INIT_POSITION = [0, 0, 0.225]
 JOINT_DIRECTIONS = np.array([-1, 1, 1, 1, 1, 1, -1, 1, 1, 1, 1, 1])
-HIP_JOINT_OFFSET = 0.0
-UPPER_LEG_JOINT_OFFSET = -0.6
-KNEE_JOINT_OFFSET = 0.66
+
+# oki
+HIP_JOINT_OFFSET = 0
+UPPER_LEG_JOINT_OFFSET = 0.9
+KNEE_JOINT_OFFSET = -1.8
 DOFS_PER_LEG = 3
-JOINT_OFFSETS = np.array([HIP_JOINT_OFFSET, UPPER_LEG_JOINT_OFFSET, KNEE_JOINT_OFFSET] * 4)
+JOINT_OFFSETS = np.array(
+    [HIP_JOINT_OFFSET, UPPER_LEG_JOINT_OFFSET, KNEE_JOINT_OFFSET] * 4)
 PI = math.pi
-TWO_PI = 2. * PI
 
 MAX_MOTOR_ANGLE_CHANGE_PER_STEP = 0.2
-_DEFAULT_HIP_POSITIONS = (
-    (0.21, -0.1157, 0),
-    (0.21, 0.1157, 0),
-    (-0.21, -0.1157, 0),
-    (-0.21, 0.1157, 0),
-)
+
+# _DEFAULT_HIP_POSITIONS = (
+#     (0.21, -0.1157, 0),
+#     (0.21, 0.1157, 0),
+#     (-0.21, -0.1157, 0),
+#     (-0.21, 0.1157, 0),
+# )
+
+_DEFAULT_HIP_POSITIONS = None
 
 ABDUCTION_P_GAIN = 220.0
 ABDUCTION_D_GAIN = 0.3
@@ -54,9 +79,9 @@ KNEE_D_GAIN = 2.0
 
 # Bases on the readings from Laikago's default pose.
 INIT_MOTOR_ANGLES = np.array([
-                                 spot_pose_utils.LAIKAGO_DEFAULT_ABDUCTION_ANGLE,
-                                 spot_pose_utils.LAIKAGO_DEFAULT_HIP_ANGLE,
-                                 spot_pose_utils.LAIKAGO_DEFAULT_KNEE_ANGLE
+                                 laikago_pose_utils.LAIKAGO_DEFAULT_ABDUCTION_ANGLE,
+                                 laikago_pose_utils.LAIKAGO_DEFAULT_HIP_ANGLE,
+                                 laikago_pose_utils.LAIKAGO_DEFAULT_KNEE_ANGLE
                              ] * NUM_LEGS)
 
 _CHASSIS_NAME_PATTERN = re.compile(r"\w+_chassis_\w+")
@@ -64,17 +89,17 @@ _MOTOR_NAME_PATTERN = re.compile(r"\w+_hip_motor_\w+")
 _KNEE_NAME_PATTERN = re.compile(r"\w+_lower_leg_\w+")
 _TOE_NAME_PATTERN = re.compile(r"jtoe\d*")
 
-URDF_FILENAME = "urdf_robot/laikago_copy/laikago_toes_limits.urdf"
+URDF_FILENAME = "spot/spot_1511.urdf"
 
 _BODY_B_FIELD_NUMBER = 2
 _LINK_A_FIELD_NUMBER = 3
 
-UPPER_BOUND = TWO_PI
-LOWER_BOUND = -TWO_PI
+UPPER_BOUND = 6.28318548203
+LOWER_BOUND = -6.28318548203
 
 
 class Spot(minitaur.Minitaur):
-
+    """A simulation for the Laikago robot."""
     MPC_BODY_MASS = 215 / 9.8
     MPC_BODY_INERTIA = (0.07335, 0, 0, 0, 0.25068, 0, 0, 0, 0.25447)
     MPC_BODY_HEIGHT = 0.42
@@ -148,7 +173,7 @@ class Spot(minitaur.Minitaur):
             ABDUCTION_D_GAIN, HIP_D_GAIN, KNEE_D_GAIN
         ]
 
-        super().__init__(
+        super(Spot, self).__init__(
             pybullet_client=pybullet_client,
             time_step=time_step,
             action_repeat=action_repeat,
@@ -156,6 +181,7 @@ class Spot(minitaur.Minitaur):
             dofs_per_leg=DOFS_PER_LEG,
             motor_direction=JOINT_DIRECTIONS,
             motor_offset=JOINT_OFFSETS,
+            motor_overheat_protection=False,
             motor_control_mode=motor_control_mode,
             motor_model_class=laikago_motor.LaikagoMotorModel,
             sensors=sensors,
@@ -167,41 +193,50 @@ class Spot(minitaur.Minitaur):
             enable_action_filter=enable_action_filter,
             reset_time=reset_time)
 
-    def _load_robot_urdf_(self):
-        laikago_urdf_path = self.get_urdf_file_()
+    def _LoadRobotURDF(self):
+        """
+        :return: load robot urdf
+        """
+        laikago_urdf_path = self.GetURDFFile()
         if self._self_collision_enabled:
             self.quadruped = self._pybullet_client.loadURDF(
                 laikago_urdf_path,
-                self._get_default_init_position_(),
-                self._get_default_init_orientation_(),
+                self._GetDefaultInitPosition(),
+                self._GetDefaultInitOrientation(),
                 flags=self._pybullet_client.URDF_USE_SELF_COLLISION)
         else:
             self.quadruped = self._pybullet_client.loadURDF(
-                laikago_urdf_path, self._get_default_init_position_(),
-                self._get_default_init_orientation_())
+                laikago_urdf_path, self._GetDefaultInitPosition(),
+                self._GetDefaultInitOrientation())
 
-    def _settle_down_for_reset_(self, default_motor_angles, reset_time):
-        self._receive_observation()
+    def _SettleDownForReset(self, default_motor_angles, reset_time):
+        """
+        Sets the default motor angles and waits for the robot to settle down.
+        :param default_motor_angles: A list of motor angles that the robot will achieve
+        at the end of the reset phase.
+        :param reset_time: The time duration for the reset phase.
+        :return:
+        """
+        self.ReceiveObservation()
 
         if reset_time <= 0:
             return
 
         for _ in range(500):
-            self._step_internal(
+            self._StepInternal(
                 INIT_MOTOR_ANGLES,
                 motor_control_mode=robot_config.MotorControlMode.POSITION)
         if default_motor_angles is not None:
             num_steps_to_reset = int(reset_time / self.time_step)
             for _ in range(num_steps_to_reset):
-                self._step_internal(
+                self._StepInternal(
                     default_motor_angles,
                     motor_control_mode=robot_config.MotorControlMode.POSITION)
 
-    @staticmethod
-    def get_hip_positions_in_base_frame():
+    def GetHipPositionsInBaseFrame(self):
         return _DEFAULT_HIP_POSITIONS
 
-    def get_foot_contacts_(self):
+    def GetFootContacts(self):
         all_contacts = self._pybullet_client.getContactPoints(bodyA=self.quadruped)
 
         contacts = [False, False, False, False]
@@ -218,13 +253,13 @@ class Spot(minitaur.Minitaur):
 
         return contacts
 
-    def compute_jacobian_(self, leg_id):
+    def ComputeJacobian(self, leg_id):
         """Compute the Jacobian for a given leg."""
         # Because of the default rotation in the Laikago URDF, we need to reorder
         # the rows in the Jacobian matrix.
-        return super().compute_jacobian(leg_id)[(2, 0, 1), :]
+        return super(Spot, self).ComputeJacobian(leg_id)[(2, 0, 1), :]
 
-    def reset_pose_(self, add_constraint):
+    def ResetPose(self, add_constraint):
         del add_constraint
         for name in self._joint_name_to_id:
             joint_id = self._joint_name_to_id[name]
@@ -249,10 +284,10 @@ class Spot(minitaur.Minitaur):
                                                   angle,
                                                   targetVelocity=0)
 
-    def get_urdf_file_(self):
+    def GetURDFFile(self):
         return self._urdf_filename
 
-    def _build_urdf_ids_(self):
+    def _BuildUrdfIds(self):
         """Build the link Ids from its name in the URDF file.
 
     Raises:
@@ -292,41 +327,38 @@ class Spot(minitaur.Minitaur):
         self._foot_link_ids.sort()
         self._leg_link_ids.sort()
 
-    @staticmethod
-    def _get_motor_names_():
+    def _GetMotorNames(self):
         return MOTOR_NAMES
 
-    def _get_default_init_position_(self):
+    def _GetDefaultInitPosition(self):
         if self._on_rack:
             return INIT_RACK_POSITION
         else:
             return INIT_POSITION
 
-    @staticmethod
-    def _get_default_init_orientation_():
+    def _GetDefaultInitOrientation(self):
         # The Laikago URDF assumes the initial pose of heading towards z axis,
         # and belly towards y-axis. The following transformation is to transform
         # the Laikago initial orientation to our commonly used orientation: heading
         # towards -x direction, and z axis is the up direction.
-        init_orientation = p.getQuaternionFromEuler(
-            [math.pi / 2.0, 0, math.pi / 2.0])
+        init_orientation = p.getQuaternionFromEuler([0., 0., 0.])
         return init_orientation
 
-    def get_default_init_position(self):
+    def GetDefaultInitPosition(self):
         """Get default initial base position."""
-        return self._get_default_init_position_()
+        return self._GetDefaultInitPosition()
 
-    def get_default_init_orientation(self):
+    def GetDefaultInitOrientation(self):
         """Get default initial base orientation."""
-        return self._get_default_init_orientation_()
+        return self._GetDefaultInitOrientation()
 
     @staticmethod
-    def get_default_init_joint_pose():
+    def GetDefaultInitJointPose():
         """Get default initial joint pose."""
         joint_pose = (INIT_MOTOR_ANGLES + JOINT_OFFSETS) * JOINT_DIRECTIONS
         return joint_pose
 
-    def apply_action(self, motor_commands, motor_control_mode):
+    def ApplyAction(self, motor_commands, motor_control_mode):
         """Clips and then apply the motor commands using the motor model.
 
     Args:
@@ -335,11 +367,11 @@ class Spot(minitaur.Minitaur):
       motor_control_mode: A MotorControlMode enum.
     """
         if self._enable_clip_motor_commands:
-            motor_commands = self._clip_motor_commands(motor_commands)
+            motor_commands = self._ClipMotorCommands(motor_commands)
 
-        super()._apply_action(motor_commands, motor_control_mode)
+        super(Spot, self).ApplyAction(motor_commands, motor_control_mode)
 
-    def _clip_motor_commands(self, motor_commands):
+    def _ClipMotorCommands(self, motor_commands):
         """Clips motor commands.
 
     Args:
@@ -352,13 +384,13 @@ class Spot(minitaur.Minitaur):
 
         # clamp the motor command by the joint limit, in case weired things happens
         max_angle_change = MAX_MOTOR_ANGLE_CHANGE_PER_STEP
-        current_motor_angles = self.get_motor_angles()
+        current_motor_angles = self.GetMotorAngles()
         motor_commands = np.clip(motor_commands,
                                  current_motor_angles - max_angle_change,
                                  current_motor_angles + max_angle_change)
         return motor_commands
 
     @classmethod
-    def get_constants_(cls):
+    def GetConstants(cls):
         del cls
-        return spot_constants
+        return laikago_constants

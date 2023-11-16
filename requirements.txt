@@ -12,4 +12,4 @@ numba
 quadprog
 inputs
 scipy==1.7.3
-sudo apt install libopenmpi-dev
+protobuf==3.20.0

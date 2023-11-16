@@ -9,7 +9,7 @@ p.setAdditionalSearchPath(pybullet_data.getDataPath())  # optionally
 p.setGravity(0, 0, -10)
 planeId = p.loadURDF("plane.urdf")
 cubeStartPos = [0, 0, 1]
-cubeStartOrientation = p.getQuaternionFromEuler([math.pi / 2., 0, math.pi / 2.])
+cubeStartOrientation = p.getQuaternionFromEuler([0, 0, 0])
 spot = p.loadURDF("motion_imitation/robots/urdf_robot/laikago_copy/laikago_toes_limits.urdf",
                   cubeStartPos, cubeStartOrientation)
 
@@ -93,13 +93,13 @@ def buildurdfids():
 
 print("----> TESTING <----")
 print(f"Number of joint: {numberjoint}")
-# for i in infojoint:
-#     print(i)
-# print(f"Joint state: {p.getJointState(spot, 0)}")
+for i in infojoint:
+    print(i)
+print(f"Joint state: {p.getJointInfo(spot, 0)}")
 # print(f"Linear jacobian: {L}")
 # print(f"Angular jacobian: {A}")
 # print(joint_name_to_id)
-print(buildurdfids())
+# print(buildurdfids())
 print("----> TESTING <----")
 
 for i in range(10000000):

@@ -21,8 +21,8 @@ from __future__ import print_function
 
 import numpy as np
 
-from motion_imitation.utilities import pose3d
-from motion_imitation.utilities import motion_util
+from utilities import pose3d
+from utilities import motion_util
 from pybullet_utils import transformations
 
 

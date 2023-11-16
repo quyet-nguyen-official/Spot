@@ -23,9 +23,7 @@ from motion_imitation.robots import robot_config
 
 @attr.s
 class SimulationParameters(object):
-    """
-    Các thông số cụ thể cho mô phỏng pyBullet
-    """
+    """Parameters specific for the pyBullet simulation."""
     sim_time_step_s = attr.ib(type=float, default=0.001)
     num_action_repeat = attr.ib(type=int, default=33)
     enable_hard_reset = attr.ib(type=bool, default=False)
@@ -38,7 +36,8 @@ class SimulationParameters(object):
     render_width = attr.ib(type=int, default=480)
     render_height = attr.ib(type=int, default=360)
     egl_rendering = attr.ib(type=bool, default=False)
-    motor_control_mode = attr.ib(type=int, default=robot_config.MotorControlMode.POSITION)
+    motor_control_mode = attr.ib(type=int,
+                                 default=robot_config.MotorControlMode.POSITION)
     reset_time = attr.ib(type=float, default=-1)
     enable_action_filter = attr.ib(type=bool, default=True)
     enable_action_interpolation = attr.ib(type=bool, default=True)
